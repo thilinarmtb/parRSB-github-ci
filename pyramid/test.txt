@@ -1,0 +1,3 @@
+mesh = pyramid
+tol = 0.02
+sha256sum = 398c209c3d1f23f02a87da8ed28472b28f8af213963ba4560e9577e428d6170a
