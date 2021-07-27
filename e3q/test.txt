@@ -1,0 +1,3 @@
+mesh = e3q
+tol = 0.2
+sha256sum = 5ea84107954ae18cfdf5ee0ec18126788f6ab745ef5d591173929eecb513a2dd
