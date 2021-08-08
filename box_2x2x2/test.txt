@@ -1,3 +1,2 @@
 mesh = bp5
 tol = 0.2
-sha256sum = 25d8c2dcc2b6b578df064b9729b767940fdcccc3faa44504baaa0afc41a8718f

@@ -1,3 +1,2 @@
 mesh = ethier
 tol = 0.2
-sha256sum = 86ff6661ded7b8e20d6721db84487d4e730a36d0531e9e9ec3ea4f6802aa480d
