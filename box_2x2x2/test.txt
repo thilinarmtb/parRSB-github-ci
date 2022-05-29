@@ -1,2 +1,2 @@
-mesh = bp5
+mesh = box_2x2x2
 tol = 0.2
