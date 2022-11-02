@@ -1,0 +1,2 @@
+mesh = box_8x1x1
+tol = 0.2
