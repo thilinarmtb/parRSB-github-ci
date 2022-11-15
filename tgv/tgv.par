@@ -3,7 +3,7 @@
 #
 [GENERAL] 
 stopAt = numSteps
-numSteps = 100
+numSteps = 20
 endTime = 20.0
 dt = 1e-02
 timeStepper = bdf2
