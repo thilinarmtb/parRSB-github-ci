@@ -1,0 +1,28 @@
+#
+# nek parameter file
+#
+[GENERAL]
+stopAt = numSteps
+numSteps = 10
+
+dt = 5.0e-4
+timeStepper = bdf3
+extrapolation = OIFS
+targetCFL = 2.0
+
+writeControl = runTime
+writeInterval = 0 #1000 
+
+[PROBLEMTYPE]
+equation = incompNS
+
+[PRESSURE]
+preconditioner = semg_xxt
+residualTol = 1e-04
+residualProj = true
+
+[VELOCITY]
+density = 1.0
+viscosity = -2000.0
+residualTol = 1e-06
+residualProj = true #false

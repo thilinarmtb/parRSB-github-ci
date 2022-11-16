@@ -1,0 +1,215 @@
+c-----------------------------------------------------------------------
+      subroutine uservp(i,j,k,eg) ! set variable properties
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      integer i,j,k,e,eg
+     
+c     e = gllel(eg)
+
+      udiff  = 0.0
+      utrans = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(i,j,k,eg) ! set acceleration term
+c
+c     Note: this is an acceleration term, NOT a force!
+c     Thus, ffx will subsequently be multiplied by rho(x,t).
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      integer i,j,k,e,eg
+
+c     e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(i,j,k,eg) ! set source term
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      integer i,j,k,e,eg
+
+c     e = gllel(eg)
+
+      qvol   = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(i,j,k,f,eg) ! set up boundary conditions
+c     NOTE ::: This routine MAY NOT be called by every process
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      integer i,j,k,f,e,eg
+      e=gllel(eg)
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 1.0
+
+      if (cbu.eq.'o  ') then
+         U0 = 1.0                  ! characteristic velocity
+         delta = 0.1               ! small positive constant
+         pa = dongOutflow(i,j,k,e,f,U0,delta)
+      endif
+
+      flux = 0.0
+      temp = 0.0
+      if (cbc(f,e,1).eq.'W  '.AND.cbc(f,e,2).eq.'t  ') temp=1.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(i,j,k,eg) ! set up initial conditions
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      integer i,j,k,e,eg
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 1.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk
+      include 'SIZE'
+      include 'TOTAL'
+
+      n=lx1*ly1*lz1*nelt
+
+      if (istep.eq.0) then
+        xxmax = glmax(xm1,n)
+        yymax = glmax(ym1,n)
+        zzmax = glmax(zm1,n)
+        xxmin = glmin(xm1,n)
+        yymin = glmin(ym1,n)
+        zzmin = glmin(zm1,n)
+        if (nio.eq.0) then
+          write(6,18) xxmin,yymin,zzmin
+          write(6,19) xxmax,yymax,zzmax
+   18     format(' xyz min  ',5g13.5)
+   19     format(' xyz max  ',5g13.5)
+        endif
+
+        ifxyo=.true.
+        do i=1,n
+          vx(i,1,1,1) = nid + 1.0
+        enddo
+        call outpost(vx,vy,vz,t,pr,'ppr')
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat   ! This routine to modify element vertices
+      include 'SIZE'
+      include 'TOTAL'
+
+c      param(40)=0 ! XXT, I dont't want to recompile 3rd_party...
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2
+      include 'SIZE'
+      include 'TOTAL'
+      integer e,f
+
+      ! R_peb = 1, mesh from rea
+      n=lx1*ly1*lz1*nelv
+      ratio = 1.0/1.5
+c     ratio = ratio * 0.94798559 
+      ratio = ratio * 0.89887640
+
+      do i=1,n
+        xm1(i,1,1,1)=xm1(i,1,1,1)*ratio
+        ym1(i,1,1,1)=ym1(i,1,1,1)*ratio
+        zm1(i,1,1,1)=zm1(i,1,1,1)*ratio
+      enddo
+
+
+      ifheat = .false.
+      nface = 2*ldim
+
+      do e=1,nelv
+      do f=1,nface
+        if(cbc(f,e,1).eq.'E  '.or.cbc(f,e,1).eq.'   ')then
+          cbc(f,e,1)='E  '
+          cbc(f,e,2)='E  '
+        elseif(cbc(f,e,1).eq.'v  ')then  ! z_bottom
+          cbc(f,e,2)='t  '
+        elseif(cbc(f,e,1).eq.'O  ')then  ! z_top
+          cbc(f,e,1)='o  '
+          cbc(f,e,2)='O  '
+        elseif(cbc(f,e,1).eq.'SYM')then  ! side of cylinder
+          cbc(f,e,1)='W  '
+          cbc(f,e,2)='I  '
+        elseif(cbc(f,e,1).eq.'W  ')then  ! pebbles
+          cbc(f,e,2)='t  '
+        else
+          write(*,*) 'bc incorrect',e,f,cbc(f,e,1)
+        endif
+      enddo
+      enddo
+
+      do iel=1,nelt
+      do ifc=1,2*ndim
+         if (cbc(ifc,iel,1) .eq. 'v  ') boundaryID(ifc,iel) = 1
+         if (cbc(ifc,iel,1) .eq. 'o  ') boundaryID(ifc,iel) = 2
+         if (cbc(ifc,iel,1) .eq. 'W  ') boundaryID(ifc,iel) = 3
+      enddo
+      enddo
+
+      param(18)=1 ! use algebraic residual norm
+      param(93)=20
+      param(94)=3
+      param(95)=5 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      function dongOutflow(ix,iy,iz,iel,iside,u0,delta)
+
+      include 'SIZE'
+      include 'SOLN'
+      include 'GEOM'
+
+      real sn(3)
+
+      ux = vx(ix,iy,iz,iel)
+      uy = vy(ix,iy,iz,iel)
+      uz = vz(ix,iy,iz,iel)
+
+      call getSnormal(sn,ix,iy,iz,iside,iel)
+      vn = ux*sn(1) + uy*sn(2) + uz*sn(3)
+      S0 = 0.5*(1.0 - tanh(vn/u0/delta))
+
+      dongOutflow = -0.5*(ux*ux+uy*uy+uz*uz)*S0
+
+      return
+      end
+c-----------------------------------------------------------------------
